@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo
+    container_name: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  auth:
+    build: ./auth-microservice
+    container_name: auth-service
+    environment:
+      - PORT=3001
+      - MONGO_URI=mongodb://mongo:27017/authdb
+      - JWT_SECRET=supersecret
+    depends_on:
+      - mongo
+
+  gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - AUTH_SERVICE_URL=http://auth:3001
+    depends_on:
+      - auth
+
+volumes:
+  mongo-data:
